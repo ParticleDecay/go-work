@@ -1,0 +1,152 @@
+#!/bin/bash
+
+DB=$HOME/.gowork.db
+
+_check_sqlite() {
+    if [ -z "$(which sqlite3)" ]
+    then
+        echo "Could not find 'sqlite3' binary in your PATH. Make sure SQLite is installed."
+        exit 1
+    fi
+}
+
+_ensure_db() {
+    sqlite3 $DB 'select * from projects;' > /dev/null 2>&1
+    if [ $? -eq 1 ]
+    then
+        # Create the database.
+        sqlite3 $DB <<EOF
+CREATE TABLE projects (
+  name   varchar(100) primary key,
+  path   varchar(255),
+  goroot varchar(255),
+  gopath varchar(255)
+);
+EOF
+        if [ $? -ne 0 ]
+        then
+            echo "There was an error creating the database."
+            exit 2
+        else
+            echo "Database created at ${DB}."
+        fi
+    fi
+}
+
+all_projects() {
+    local projects=$(sqlite3 $DB 'select name from projects;')
+    if [ -z "${projects[@]}" ]
+    then
+        echo "No projects yet. Add one with \`$(basename $0) [-n name] <repo_url>\`."
+    fi
+    echo "$projects"
+    exit 0
+}
+
+get_project() {
+    name=$1
+    local project_info=$(sqlite3 $DB "select * from projects where name='$name';")
+    echo "$project_info"
+}
+
+add_project() {
+    name=$1
+    path=${GOPATH}/src/$(echo $name | tr ':' '/')
+
+    # If path doesn't exist, we need to create it and clone project.
+    if [ ! -d $path ]
+    then
+        # Check if git repository.
+        git ls-remote git@${name}.git > /dev/null 2>&1
+        if [ $? -eq 128 ]
+        then
+            echo "'${name}' is not a valid Git repository."
+            exit 5
+        fi
+    
+        # Clone repo.
+        [ ! -d ${path} ] && mkdir -p ${path}
+        if [ $? -ne 0 ]
+        then
+            echo "There was an error while attempting to create '${path}' directory."
+            exit 6
+        fi
+        git clone git@${name}.git ${path} > /dev/null 2>&1
+        if [ $? -ne 0 ]
+        then
+            echo "There was an error while cloning the repository '${name}'."
+            exit 7
+        fi
+    fi
+
+    # Add to the database.
+    sqlite3 $DB "INSERT INTO projects VALUES ('$name', '$path', '$GOROOT', '$GOPATH');" > /dev/null 2>&1
+    if [ $? -ne 0 ]
+    then
+        echo "There was a problem adding project to database."
+        exit 8
+    fi
+    echo "Project created."
+}
+
+# Parse arguments that were passed.
+while getopts ":d:" opt
+do
+    case $opt in
+        d)
+            DB=$OPTARG
+            shift
+            shift
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 3
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit 4
+            ;;
+    esac
+done
+
+# Ensure SQLite is installed.
+_check_sqlite
+
+# Ensure database exists.
+_ensure_db $DB
+
+# If no args, only show the available projects.
+if [ -z "$1" ]
+then
+    all_projects
+fi
+
+project_name="$1"
+
+# Check database for project.
+project_info="$(get_project $project_name)"
+if [ -z "$project_info" ]
+then
+    add_project $project_name
+fi
+
+# Get ready to use project.
+[ -z "$project_info" ] && project_info="$(get_project $project_name)"
+project_path=$(echo $project_info | awk -F'|' '{print $2}')
+goroot=$(echo $project_info | awk -F'|' '{print $3}')
+gopath=$(echo $project_info | awk -F'|' '{print $4}')
+
+cd $project_path
+export GOROOT=$goroot
+export GOPATH=$gopath
+short_name=$(basename $project_name)
+exists=$(tmux ls 2> /dev/null | awk -F: -v project_name=$short_name '$1 == project_name {print $1}')
+if [ -z "$exists" ]
+then
+    tmux new -s $short_name \; \
+        setenv GOROOT "$GOROOT"\; \
+        setenv GOPATH "$GOPATH"\; \
+        send-keys -t $short_name "export GOROOT=\""$GOROOT"\"; export GOPATH=\""$GOPATH"\"" C-m
+else
+    tmux a -t $short_name
+fi
