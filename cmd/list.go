@@ -7,7 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var shortOutput bool
+
 func init() {
+	listCmd.PersistentFlags().BoolVarP(&shortOutput, "short", "s", false, "display shortened output")
 	rootCmd.AddCommand(listCmd)
 }
 
@@ -25,7 +28,11 @@ var listCmd = &cobra.Command{
 
 		projects := db.GetProjects("")
 		for _, project := range projects {
-			fmt.Printf("%s (%s)\n", project.Name, project.Path)
+			var extraOutput string
+			if shortOutput != true {
+				extraOutput = fmt.Sprintf(" (%s)", project.Path)
+			}
+			fmt.Printf("%s%s\n", project.Name, extraOutput)
 		}
 	},
 }
