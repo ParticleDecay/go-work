@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	db "github.com/ParticleDecay/go-work/pkg/database"
-	log "github.com/Sirupsen/logrus"
 	homedir "github.com/mitchellh/go-homedir"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 

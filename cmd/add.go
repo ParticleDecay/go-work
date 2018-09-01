@@ -8,7 +8,7 @@ import (
 
 	"github.com/ParticleDecay/go-work/pkg/database"
 	"github.com/ParticleDecay/go-work/pkg/git"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -66,7 +66,7 @@ func addHandler(cmd *cobra.Command, args []string) {
 
 		// Clone the repo.
 		if gitRemote != nil && dirExists == false {
-			log.Debug(fmt.Sprintf("Using git remote '%s'", gitRemote.FullURL()))
+			log.Debugf("Using git remote '%s'", gitRemote.FullURL())
 			repo := git.Repo{URL: gitRemote}
 			repo.Clone(fullPath)
 		}

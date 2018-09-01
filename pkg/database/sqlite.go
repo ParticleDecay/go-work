@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/ParticleDecay/go-work/pkg/tmux"
-	log "github.com/Sirupsen/logrus"
 	"github.com/manifoldco/promptui"
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	log "github.com/sirupsen/logrus"
 )
 
 // Project represents an instance of a project environment.
@@ -29,7 +29,7 @@ func (d *Database) Open() {
 	if d.Path == "" {
 		log.Fatal("Cannot open database without a path to database file")
 	}
-	log.Debug(fmt.Sprintf("Using database file %s", d.Path))
+	log.Debugf("Using database file %s", d.Path)
 	db, err := sql.Open("sqlite3", d.Path)
 	if err != nil {
 		log.Fatal(err)
@@ -134,7 +134,7 @@ func (d *Database) SelectProject(name string) {
 	} else {
 		log.Fatal(fmt.Sprintf("'%s' project not found. Try adding it with the 'add' command.", name))
 	}
-	log.Debug(fmt.Sprintf("Selected project '%s' at %s", selectedProject.Name, selectedProject.Path))
+	log.Debugf("Selected project '%s' at %s", selectedProject.Name, selectedProject.Path)
 
 	tmux.LaunchEnvironment(selectedProject.Name, selectedProject.Path, selectedProject.Goroot, selectedProject.Gopath)
 }
