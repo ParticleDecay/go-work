@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -15,7 +16,19 @@ func LaunchEnvironment(sessionName string, path string, goroot string, gopath st
 	log.Debugf("Calling out to tmux command")
 	tmuxes, err := exec.Command("tmux", "ls", "-F", "'#S'").Output()
 	if err != nil {
-		log.Fatal(err)
+		// Check for exit status 1 (tmux server not running)
+		ignoreErr := false
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				if status.ExitStatus() == 1 {
+					ignoreErr = true // we want to start it ourselves
+					log.Debugf("No tmux sessions found")
+				}
+			}
+		}
+		if ignoreErr == false {
+			log.Fatal(err)
+		}
 	}
 	for _, session := range strings.Split(string(tmuxes), "\n") {
 		if string(session) == quotedName {
