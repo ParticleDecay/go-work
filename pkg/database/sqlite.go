@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/ParticleDecay/go-work/pkg/tmux"
+	"github.com/ParticleDecay/gowork/pkg/tmux"
 	"github.com/manifoldco/promptui"
 	_ "github.com/mattn/go-sqlite3" // SQLite driver
 	log "github.com/sirupsen/logrus"

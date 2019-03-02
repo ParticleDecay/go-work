@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ParticleDecay/go-work/cmd"
+	"github.com/ParticleDecay/gowork/cmd"
 )
 
 func main() {

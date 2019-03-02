@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	db "github.com/ParticleDecay/go-work/pkg/database"
+	db "github.com/ParticleDecay/gowork/pkg/database"
 	homedir "github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

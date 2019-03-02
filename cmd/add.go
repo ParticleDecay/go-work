@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ParticleDecay/go-work/pkg/database"
-	"github.com/ParticleDecay/go-work/pkg/git"
+	"github.com/ParticleDecay/gowork/pkg/database"
+	"github.com/ParticleDecay/gowork/pkg/git"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
